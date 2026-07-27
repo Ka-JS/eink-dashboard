@@ -10,8 +10,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def get_calendar_events(calendar_id, start_of_day, end_of_day):
-    SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
+    """
+    Fetches events from the specified Google Calendar for the given day.
+    """
 
+
+    SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
     creds = None
 
@@ -43,9 +47,11 @@ def get_calendar_events(calendar_id, start_of_day, end_of_day):
     clean_events = []
     for event in events:
         start = event["start"].get("dateTime", event["start"].get("date"))
+        end = event["end"].get("dateTime", event["end"].get("date"))
         clean_events.append({
             "title": event.get("summary", "Untitled"),
             "start": start,
+            "end": end,
             "location": event.get("location", None)
         })
         

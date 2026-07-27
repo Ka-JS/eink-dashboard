@@ -1,17 +1,26 @@
-from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont
+import os
+from datetime import datetime, timezone
+from weather import get_weather
+from calendar_api import get_calendar_events
+from render import render_frame
+from dotenv import load_dotenv
 
-img = Image.new("RGB", (800, 480), "white")
-draw = ImageDraw.Draw(img)
+load_dotenv()
 
-time_font = ImageFont.truetype("fonts/InterDisplay-Bold.ttf", 64)
-label_font = ImageFont.truetype("fonts/Inter.ttf", 22)
-weather_font = ImageFont.truetype("fonts/weathericons.ttf", 48)
+weather = get_weather()
+events = get_calendar_events(
+    calendar_id=os.getenv("GOOGLE_CALENDAR_ID"),
+    start_of_day=datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
+    end_of_day=datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=0)
+)
 
-now = datetime.now()
-draw.text((20, 20), now.strftime("%H:%M"), fill="black", font=time_font)
-draw.text((20, 100), now.strftime("%A, %d %B %Y"), fill="black", font=label_font)
+frame = render_frame(weather, events)
 
-draw.text((600, 20), "\uf019", fill="black", font=weather_font)
+print("Weather:", weather["condition"], "with a temperature of", weather["temp"], "°C")
+if not events:
+    print("No events today.")
+else:
+    for event in events:
+        print(event["start"], "-", event["title"])
 
-img.save("test.png")
+frame.save("test.png")
