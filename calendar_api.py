@@ -10,10 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def get_calendar_events(calendar_id, start_of_day, end_of_day):
-    """
-    Fetches events from the specified Google Calendar for the given day.
-    """
-
+    """Fetches events from the specified Google Calendar for the given day."""
 
     SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
