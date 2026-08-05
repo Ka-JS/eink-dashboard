@@ -1,3 +1,4 @@
+# main.py
 import os
 from datetime import datetime, timezone
 from weather import get_weather
