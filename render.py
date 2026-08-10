@@ -1,5 +1,7 @@
 # render.py
 from datetime import datetime
+import os
+from zoneinfo import ZoneInfo
 from PIL import Image, ImageDraw, ImageFont
 
 WEATHER_ICONS = {
@@ -40,7 +42,8 @@ def render_frame(weather, events):
     condition = WEATHER_ICONS.get(weather["main"], WEATHER_ICONS["Clear"])
     icon_char = condition["day"] if weather["is_day"] else condition["night"]
 
-    draw.text((20, 20), datetime.now().strftime("%H:%M"), font=time_font, fill="black")
+    timezone_name = os.getenv("TIMEZONE") or "UTC"
+    draw.text((20, 20), datetime.now(ZoneInfo(timezone_name)).strftime("%H:%M"), font=time_font, fill="black")
     draw.text((20, 100), f"Weather: {weather['condition']}, {weather['temp']}°C", font=label_font, fill="black")
     draw.text((500, 20), icon_char, font=weather_font, fill="black")
     y = 180

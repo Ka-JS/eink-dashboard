@@ -1,6 +1,7 @@
 import json
 import anthropic
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
 from dotenv import load_dotenv
 
@@ -13,7 +14,8 @@ client = anthropic.Anthropic(api_key=api_key)
 def parse_event(message_text):
     """Parses a natural language message into a structured calendar event using the Anthropic API."""
 
-    today = datetime.now().strftime("%Y-%m-%d")
+    timezone_name = os.getenv("TIMEZONE") or "UTC"
+    today = datetime.now(ZoneInfo(timezone_name)).strftime("%Y-%m-%d")
 
     prompt = f"""Today's date is {today}.
         Parse the following message into a calendar event.
