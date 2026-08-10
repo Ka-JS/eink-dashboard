@@ -7,11 +7,7 @@ load_dotenv()
 
 
 def get_weather():
-    """
-    Retrieves the current weather data from the OpenWeatherMap API.
-    Returns:
-    dict: A dictionary containing the temperature and weather condition description.
-    """
+    """Retrieves the current weather data from the OpenWeatherMap API."""
 
     api_key = os.getenv("OPENWEATHER_API_KEY")
     lat = os.getenv("WEATHER_LAT")

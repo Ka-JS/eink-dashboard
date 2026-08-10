@@ -54,9 +54,54 @@ def get_calendar_events(calendar_id, start_of_day, end_of_day):
         
     return clean_events
 
+
+def create_calendar_event(calendar_id, event_dict):
+    """Creates a new event in the specified Google Calendar."""
+
+    SCOPES = ["https://www.googleapis.com/auth/calendar"]
+
+    creds = None
+
+    if os.path.exists("token.json"):
+        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+            creds = flow.run_local_server(port=0)
+
+        with open("token.json", "w") as token_file:
+            token_file.write(creds.to_json())
+
+    service = build("calendar", "v3", credentials=creds)
+
+    event = {
+    "summary": event_dict["title"],
+    "start": {
+        "dateTime": event_dict["start"],
+        "timeZone": os.getenv("TIMEZONE"),
+    },
+    "end": {
+        "dateTime": event_dict["end"],
+        "timeZone": os.getenv("TIMEZONE"),
+    },
+}
+
+    created_event = service.events().insert(calendarId=calendar_id, body=event).execute()
+    return created_event
+
+
 if __name__ == "__main__":
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc)
-    start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    end = now.replace(hour=23, minute=59, second=59, microsecond=0)
-    print(get_calendar_events(os.getenv("GOOGLE_CALENDAR_ID"), start, end))
+    calendar_id = os.getenv("GOOGLE_CALENDAR_ID")
+    now = datetime.now()
+    start = now.replace(hour=15, minute=0, second=0, microsecond=0)
+    end = now.replace(hour=16, minute=0, second=0, microsecond=0)
+
+    result = create_calendar_event(calendar_id, {
+        "title": "Test Event",
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+    })
+    print(result)
