@@ -27,7 +27,7 @@ if not creds or not creds.valid:
 service = build("calendar", "v3", credentials=creds)
 
 
-calendar_id = "REDACTED"
+calendar_id = "..."
 
 now = datetime.now(timezone.utc)
 start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
