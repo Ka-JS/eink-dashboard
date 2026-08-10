@@ -22,7 +22,10 @@ async def on_message(message):
         return
     
     if message.channel.name == "calendar":
-        await message.channel.send("Hello World!")
-    pass
+        print(message.content)
+        await message.channel.send(f"You said: {message.content}")
+
+if not TOKEN:
+    raise ValueError("DISCORD_BOT_TOKEN is not set")
 
 client.run(TOKEN)
