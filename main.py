@@ -1,6 +1,7 @@
 # main.py
 import os
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from weather import get_weather
 from calendar_api import get_calendar_events
 from render import render_frame
@@ -8,11 +9,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+timezone_name = os.getenv("TIMEZONE") or "UTC"
+
+tz = ZoneInfo(timezone_name)
+now = datetime.now(tz)
+start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+end_of_day = now.replace(hour=23, minute=59, second=59, microsecond=0)
+
 weather = get_weather()
 events = get_calendar_events(
     calendar_id=os.getenv("GOOGLE_CALENDAR_ID"),
-    start_of_day=datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
-    end_of_day=datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=0)
+    start_of_day=start_of_day,
+    end_of_day=end_of_day
 )
 
 frame = render_frame(weather, events)
