@@ -1,6 +1,9 @@
 #bot.py
 import os
 import discord
+from parser import parse_event
+from calendar_api import create_calendar_event
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,8 +25,15 @@ async def on_message(message):
         return
     
     if message.channel.name == "calendar":
-        print(message.content)
-        await message.channel.send(f"You said: {message.content}")
+        event = parse_event(message.content)
+
+        if event is None:
+            await message.channel.send("Sorry, I couldn't understand that.")
+            return
+
+        calendar_id = os.getenv("GOOGLE_CALENDAR_ID")
+        create_calendar_event(calendar_id, event)
+        await message.channel.send(f"Added: {event['title']} at {event['start']}")
 
 if not TOKEN:
     raise ValueError("DISCORD_BOT_TOKEN is not set")
