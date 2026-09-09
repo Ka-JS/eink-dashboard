@@ -19,15 +19,13 @@ end_of_day = now.replace(hour=23, minute=59, second=59, microsecond=0)
 
 weather = get_weather()
 
-calendar_ids_string = os.getenv("GOOGLE_CALENDAR_IDS")
-calendar_ids = calendar_ids_string.split(",") if calendar_ids_string else []
-events = []
-for calendar_id in calendar_ids:
-    events.extend(get_calendar_events(
-        calendar_id=calendar_id,
-        start_of_day=start_of_day,
-        end_of_day=end_of_day
-    ))
+calendar_ids_string = os.getenv("GOOGLE_CALENDAR_IDS") or ""
+
+events = get_calendar_events(
+    calendar_id=calendar_ids_string,
+    start_of_day=start_of_day,
+    end_of_day=end_of_day
+)
 
 brief = generate_brief(weather, events)
 
