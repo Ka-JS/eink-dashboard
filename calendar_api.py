@@ -31,27 +31,34 @@ def get_calendar_events(calendar_id, start_of_day, end_of_day):
 
     service = build("calendar", "v3", credentials=creds)
 
-    events_result = service.events().list(
-        calendarId=calendar_id,
-        timeMin=start_of_day.isoformat(),
-        timeMax=end_of_day.isoformat(),
-        singleEvents=True,
-        orderBy="startTime",
-    ).execute()
-
-    events = events_result.get("items", [])
-
     clean_events = []
-    for event in events:
-        start = event["start"].get("dateTime", event["start"].get("date"))
-        end = event["end"].get("dateTime", event["end"].get("date"))
-        clean_events.append({
-            "title": event.get("summary", "Untitled"),
-            "start": start,
-            "end": end,
-            "location": event.get("location", None)
-        })
-        
+    
+    for cid in calendar_id.split(","):
+        try:
+            events_result = service.events().list(
+                calendarId=cid.strip(),
+                timeMin=start_of_day.isoformat(),
+                timeMax=end_of_day.isoformat(),
+                singleEvents=True,
+                orderBy="startTime",
+                timeZone=os.getenv("TIMEZONE")
+            ).execute()
+
+            events = events_result.get("items", [])
+
+            for event in events:
+                start = event["start"].get("dateTime", event["start"].get("date"))
+                end = event["end"].get("dateTime", event["end"].get("date"))
+                clean_events.append({
+                    "title": event.get("summary", "Untitled"),
+                    "start": start,
+                    "end": end,
+                    "location": event.get("location", None)
+                })
+        except Exception:
+            pass
+
+    clean_events.sort(key=lambda x: x["start"])
     return clean_events
 
 
@@ -89,12 +96,13 @@ def create_calendar_event(calendar_id, event_dict):
     },
 }
 
-    created_event = service.events().insert(calendarId=calendar_id, body=event).execute()
+    primary_id = calendar_id.split(",")[0].strip()
+    created_event = service.events().insert(calendarId=primary_id, body=event).execute()
     return created_event
 
 
 if __name__ == "__main__":
-    calendar_id = os.getenv("GOOGLE_CALENDAR_ID")
+    calendar_id = os.getenv("GOOGLE_CALENDAR_IDS") # used to add events to calendar for testing
     now = datetime.now()
     start = now.replace(hour=10, minute=0, second=0, microsecond=0)
     end = now.replace(hour=12, minute=0, second=0, microsecond=0)
