@@ -1,9 +1,11 @@
-# render.py
+ # render.py
 from datetime import datetime
 import os
 from zoneinfo import ZoneInfo
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
+
+timezone_name = os.getenv("TIMEZONE") or "UTC"
 
 
 WEATHER_ICONS = {
@@ -26,39 +28,81 @@ def format_event_time(event):
         start_time = datetime.fromisoformat(start)
         end_time = datetime.fromisoformat(end)
         duration = end_time - start_time
-        if duration.total_seconds() <= 3600:  # If the event is less than an hour, show only the start time
-            return start_time.strftime("%H:%M")
-        else:
-            return f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
+        return start_time.strftime("%H:%M")
     else:
         return "All day"
 
+def shorten_title(title, max_chars=25): # 25 because of the available space in the display
+    """Shortens a title to fit the display, adding an ellipsis if necessary."""
+    if len(title) > max_chars:
+        return title[:max_chars - 1].rstrip() + "…"
+    return title
+
 def render_frame(weather, events, brief):
-    """Renders the frame with the current time, weather, and calendar events."""
+    """Renders the entire frame for the e-ink display."""
     img = Image.new("RGB", (800, 480), "white")
     draw = ImageDraw.Draw(img)
- 
-    time_font = ImageFont.truetype("fonts/InterDisplay-Bold.ttf", 64) # fonts
+
+    # Fonts
+    time_font = ImageFont.truetype("fonts/InterDisplay-Bold.ttf", 64)
+    header_font = ImageFont.truetype("fonts/InterDisplay-Bold.ttf", 18)
+    temp_font = ImageFont.truetype("fonts/InterDisplay-Bold.ttf", 40)
     label_font = ImageFont.truetype("fonts/Inter.ttf", 22)
-    weather_font = ImageFont.truetype("fonts/weathericons.ttf", 48) # icons
-    condition = WEATHER_ICONS.get(weather["main"], WEATHER_ICONS["Clear"])
-    icon_char = condition["day"] if weather["is_day"] else condition["night"] #day&night
+    small_font = ImageFont.truetype("fonts/Inter.ttf", 16)
+    weather_font = ImageFont.truetype("fonts/weathericons.ttf", 44)
 
-    timezone_name = os.getenv("TIMEZONE") or "UTC"
-    draw.text((20, 20), datetime.now(ZoneInfo(timezone_name)).strftime("%H:%M"), font=time_font, fill="black") # time
-    draw.text((20, 100), f"Weather: {weather['condition']}, {weather['temp']}°C", font=label_font, fill="black") # weather
-    draw.text((500, 20), icon_char, font=weather_font, fill="black") # weather icon
-    y = 180
-    for event in events: # events
-        time_str = format_event_time(event)
-        draw.text((20, y), time_str, font=label_font, fill="black")
-        draw.text((150, y), f" ·  {event['title']}", font=label_font, fill="black")  # fixed x, always same column
-        y += 30  # move down for the next line
+    now = datetime.now(ZoneInfo(timezone_name))
 
-    lines = textwrap.wrap(brief, width=70)
-    y += 20  # some space between events and brief
-    for line in lines:
-        draw.text((20, y), line, font=label_font, fill="black")
-        y += 25
+    if weather["is_day"]:
+        icon_char = WEATHER_ICONS.get(weather["main"], WEATHER_ICONS["Clear"])["day"]
+    else:
+        icon_char = WEATHER_ICONS.get(weather["main"], WEATHER_ICONS["Clear"])["night"]
+
+    # left column
+    draw.text((24, 24), now.strftime("%H:%M"), font=time_font, fill="black")
+    draw.text((24, 102), now.strftime("%A, %d %B"), font=label_font, fill="black")
+    
+    # Weather
+    draw.text((24, 150), icon_char, font=weather_font, fill="black")
+    draw.text((74, 150), f"{int(weather['temp'])}°C", font=temp_font, fill="black")
+    
+    draw.text((24, 205), weather["condition"].capitalize(), font=small_font, fill="#444444")
+    draw.text((24, 227), f"H:{int(weather['high'])}°   L:{int(weather['low'])}°", font=small_font, fill="#444444")
+
+    if weather["rain"] > 0:
+        draw.text((24, 249), f"Rain: {weather['rain']}mm/h", font=small_font, fill="#444444")
+
+    # right column
+    draw.text((428, 24), "TODAY", font=header_font, fill="black")
+    draw.line([(428, 50), (780, 50)], fill="black", width=1)
+
+    # today events
+    event_y = 68
+    if not events:
+        draw.text((428, event_y), "Nothing scheduled.", font=label_font, fill="#666666")
+    else:
+        MAX_EVENTS_SHOWN = 5
+        displayed = events[:MAX_EVENTS_SHOWN]
+        remaining = len(events) - len(displayed)
+
+        for event in displayed:
+            draw.text((428, event_y), format_event_time(event), font=label_font, fill="black")
+            draw.text((490, event_y), f"· {shorten_title(event['title'])}", font=label_font, fill="black")
+            event_y += 34
+
+        if remaining > 0:
+            draw.text((428, event_y), f"+{remaining} more", font=small_font, fill="#666666")
+
+    # lines to separate sections
+    draw.line([(400, 24), (400, 260)], fill="black", width=2)
+    draw.line([(24, 280), (780, 280)], fill="black", width=2)
+
+    # brief
+    draw.text((24, 295), "BRIEF", font=header_font, fill="black")
+    
+    brief_y = (332-5)
+    for line in textwrap.wrap(brief, width=70):
+        draw.text((24, brief_y), line, font=label_font, fill="black")
+        brief_y += 28
 
     return img

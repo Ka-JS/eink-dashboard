@@ -29,6 +29,7 @@ brief = generate_brief(weather, events)
 frame = render_frame(weather, events, brief)
 
 print("Weather:", weather["condition"], "with a temperature of", weather["temp"], "°C")
+print("Brief:", brief)
 if not events:
     print("No events today.")
 else:

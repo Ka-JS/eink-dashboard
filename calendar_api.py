@@ -96,11 +96,11 @@ def create_calendar_event(calendar_id, event_dict):
 if __name__ == "__main__":
     calendar_id = os.getenv("GOOGLE_CALENDAR_ID")
     now = datetime.now()
-    start = now.replace(hour=15, minute=0, second=0, microsecond=0)
-    end = now.replace(hour=16, minute=0, second=0, microsecond=0)
+    start = now.replace(hour=10, minute=0, second=0, microsecond=0)
+    end = now.replace(hour=12, minute=0, second=0, microsecond=0)
 
     result = create_calendar_event(calendar_id, {
-        "title": "Test Event",
+        "title": "DATA.ML.100, Tekoälyn perusteet, Luennot",
         "start": start.isoformat(),
         "end": end.isoformat(),
     })
