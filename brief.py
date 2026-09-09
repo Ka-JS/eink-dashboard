@@ -30,7 +30,8 @@ def generate_brief(weather, events):
 
         INPUT DATA:
         - Date: {today}
-        - Weather: {weather['condition']} at {weather['temp']}°C
+        - Current Weather: {weather['condition']} at {weather['temp']}°C
+        - Today's Forecast: High of {weather['high']}°C, Low of {weather['low']}°C
         - Events: {event_summary}
 
         Generate only the brief.
