@@ -6,6 +6,7 @@ from weather import get_weather
 from calendar_api import get_calendar_events
 from render import render_frame
 from dotenv import load_dotenv
+from brief import generate_brief
 
 load_dotenv()
 
@@ -23,7 +24,9 @@ events = get_calendar_events(
     end_of_day=end_of_day
 )
 
-frame = render_frame(weather, events)
+brief = generate_brief(weather, events)
+
+frame = render_frame(weather, events, brief)
 
 print("Weather:", weather["condition"], "with a temperature of", weather["temp"], "°C")
 if not events:
@@ -31,5 +34,6 @@ if not events:
 else:
     for event in events:
         print(event["start"], "-", event["title"])
+
 
 frame.save("test.png")
