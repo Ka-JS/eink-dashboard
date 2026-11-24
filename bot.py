@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+MY_ID = os.getenv("DISCORD_USER_ID")
+
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
 intents = discord.Intents.default()
@@ -21,7 +23,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author.id != MY_ID:
         return
     
     if message.channel.name == "calendar":
@@ -32,7 +34,13 @@ async def on_message(message):
             return
 
         calendar_id = os.getenv("GOOGLE_CALENDAR_ID")
-        create_calendar_event(calendar_id, event)
+        try:
+            create_calendar_event(calendar_id, event)
+        except Exception as e:
+            print("Calendar error:", e)
+            await message.channel.send("Couldn't save to calendar.")
+            return
+        
         await message.channel.send(f"Added: {event['title']} at {event['start']}")
 
 if not TOKEN:

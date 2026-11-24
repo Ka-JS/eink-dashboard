@@ -11,6 +11,13 @@ api_key = os.getenv("ANTHROPIC_API_KEY")
 
 client = anthropic.Anthropic(api_key=api_key)
 
+def get_text(response): #haiku 5.5 requires
+    """First text block from response."""
+    for block in response.content:
+        if block.type == "text":
+            return block.text.strip()
+    return ""
+
 def parse_event(message_text):
     """Parses a natural language message into a structured calendar event using the Anthropic API."""
 
@@ -27,12 +34,14 @@ def parse_event(message_text):
         """
     
     response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=150,
+        model="claude-haiku-5-5",
+        max_tokens=1024,
         messages=[{"role": "user", "content": prompt}]
     )
 
-    raw_text = response.content[0].text.strip()
+    raw_text = get_text(response)
+    if not raw_text:
+        return None
     if raw_text.startswith("```"):
         raw_text = raw_text.replace("```json", "").replace("```", "")
     

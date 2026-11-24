@@ -10,6 +10,13 @@ api_key = os.getenv("ANTHROPIC_API_KEY")
 
 client = anthropic.Anthropic(api_key=api_key)
 
+def get_text(response): #haiku 5.5 requires
+    """First text block from response."""
+    for block in response.content:
+        if block.type == "text":
+            return block.text.strip()
+    return ""
+
 def generate_brief(weather, events):
     timezone_name = os.getenv("TIMEZONE") or "UTC"
     today = datetime.now(ZoneInfo(timezone_name)).strftime("%Y-%m-%d")
@@ -38,12 +45,14 @@ def generate_brief(weather, events):
         """
 
     response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=150,
+            model="claude-haiku-5-5",
+            max_tokens=1024,
             messages=[{"role": "user", "content": prompt}]
         )
 
-    raw_text = response.content[0].text.strip()
+    raw_text = get_text(response)
+    if not raw_text:
+        return None
     if raw_text.startswith("```"):
         raw_text = raw_text.replace("```", "")
 
@@ -51,7 +60,7 @@ def generate_brief(weather, events):
 
 if __name__ == "__main__":
     # Example test, dont care about the actual date, just want to see the output format
-    weather = {"condition": "Rain", "temp": 12}
+    weather = {"condition": "Rain", "temp": 12, "high": 14, "low": 9}
     events = [
         {"title": "Team Meeting", "start": "2026-09-9T10:00:00"},
         {"title": "Doctor Appointment", "start": "2026-09-9T14:30:00"}]
