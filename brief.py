@@ -23,14 +23,18 @@ def generate_brief(weather, events):
 
     event_summary = ""
     for event in events:
-        event_summary += (f"- {event['title']} at {event['start']}\n")
+        time = event["start"] or "all day"
+        place = event.get("location") or ""
+        event_summary += f"- {time} {event['title']} {place}\n"
+    if not events:
+        event_summary = "None"
 
     prompt = f"""
         You are a friendly, proactive smart home assistant. Your job is to generate a short, conversational daily brief for a smart display. 
         CRITICAL CONSTRAINTS:
         1. The display ALREADY shows the exact time, current weather, and calendar details. DO NOT simply repeat raw facts or recite a schedule.
         2. Instead, synthesize the data into actionable advice, helpful reminders, or friendly nudges based on the weather and events.
-        3. Keep the total length under 60 words.
+        3. Keep the total length under 45 words.
         4. Tone: Warm, natural, and helpful (like a thoughtful roommate or assistant).
         5. Do not use emojis.
         6. If there are no events, focus on the weather and general advice.
@@ -38,12 +42,14 @@ def generate_brief(weather, events):
         INPUT DATA:
         - Date: {today}
         - Current Weather: {weather['condition']} at {weather['temp']}°C
-        - Today's Forecast: High of {weather['high']}°C, Low of {weather['low']}°C
-        - Events: {event_summary}
+        - Next 24h: High {weather['high']}°C, Low {weather['low']}°C, {weather['pop']}% chance of rain or snow
+        - Sunset: {weather['sunset']}
+        - Events:
+        {event_summary}
 
         Generate only the brief.
         """
-
+    
     response = client.messages.create(
             model="claude-haiku-5-5",
             max_tokens=1024,
@@ -60,10 +66,10 @@ def generate_brief(weather, events):
 
 if __name__ == "__main__":
     # Example test, dont care about the actual date, just want to see the output format
-    weather = {"condition": "Rain", "temp": 12, "high": 14, "low": 9}
+    weather = {"condition": "Rain", "temp": 12, "high": 14, "low": 9, "pop": 70, "sunset": "15:31"}
     events = [
-        {"title": "Team Meeting", "start": "2026-09-9T10:00:00"},
-        {"title": "Doctor Appointment", "start": "2026-09-9T14:30:00"}]
+        {"title": "Team Meeting", "start": "2026-11-25T10:00:00"},
+        {"title": "Doctor Appointment", "start": "2026-11-25T14:30:00"}]
     brief = generate_brief(weather, events)
     print("With events:")
     print(brief)
